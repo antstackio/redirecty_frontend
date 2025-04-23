@@ -1,6 +1,5 @@
-import React from 'react';
-import { SignedIn, SignedOut, SignIn } from "@clerk/clerk-react";
 import { Link } from 'react-router-dom';
+import { SignedIn, SignedOut, SignIn } from "@clerk/clerk-react";
 
 const Home = () => {
   return (
