@@ -50,13 +50,13 @@ export function UrlList() {
       });
   };
 
-  // Filter URLs based on search query (checking both original and short URL)
+  // Filter URLs based on search query (checking ONLY title)
   const filteredUrls = urls.filter(
     (url) => {
-      const fullShort = getFullShortUrl(url.shortCode).toLowerCase();
-      const original = url.originalUrl.toLowerCase();
+      // Removed checks for original and short URL
+      const title = url.title?.toLowerCase() || '';
       const query = searchQuery.toLowerCase();
-      return original.includes(query) || fullShort.includes(query);
+      return title.includes(query); // Only check title
     }
   );
 
@@ -81,7 +81,7 @@ export function UrlList() {
     <div className="space-y-6">
       <div className="flex w-full max-w-sm items-center space-x-2">
         <Input
-          placeholder="Search URL by Short Code"
+          placeholder="Search URL by Title"
           value={searchQuery}
           onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
           className="w-full"
@@ -114,35 +114,32 @@ export function UrlList() {
              return (
               <Card key={url.shortCode} className="overflow-hidden flex flex-col">
                 <CardHeader className="pb-3">
-                  <CardTitle className="truncate text-base font-medium leading-tight">
+                  {url.title && (
+                    <p className="text-sm font-medium text-foreground mb-1 truncate" title={url.title}>
+                      {url.title}
+                    </p>
+                  )}
+                  <CardTitle className="truncate text-sm font-normal text-muted-foreground leading-tight">
                     <a
                       href={url.originalUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center hover:underline"
-                      title={url.originalUrl} // Add title for full URL on hover
+                      title={url.originalUrl}
                     >
-                      {/* Display original URL, truncated if too long */}
                       <span className="truncate">{url.originalUrl}</span> 
                       <ExternalLink className="ml-2 h-3 w-3 flex-shrink-0" />
                     </a>
                   </CardTitle>
-                  {/* 
-                    Removed CardDescription with clicks/date as it's not in UrlWithVisits
-                    <CardDescription className="flex items-center justify-between pt-1">
-                      <span>Created {formatDate(url.createdAt)}</span> 
-                      <span className="font-medium text-primary">{url.clicks} clicks</span>
-                    </CardDescription> 
-                  */}
                 </CardHeader>
-                <CardContent className="pb-2 flex-grow"> {/* Allow content to grow */}
+                <CardContent className="pb-2 flex-grow">
                   <div className="flex items-center justify-between rounded-md border p-2">
                     <a 
                       href={fullShortUrl} 
                       target="_blank" 
                       rel="noopener noreferrer"
                       className="truncate font-mono text-sm hover:underline mr-2"
-                      title={fullShortUrl} // Add title for full URL on hover
+                      title={fullShortUrl}
                     >
                       {displayShortUrl}
                     </a>
@@ -152,7 +149,7 @@ export function UrlList() {
                       className="h-7 w-7 flex-shrink-0"
                       onClick={() => copyToClipboard(url.shortCode)} 
                       aria-label="Copy Short URL"
-                      title="Copy short URL" // Add title for tooltip
+                      title="Copy short URL"
                     >
                       <Copy className="h-4 w-4" />
                     </Button>

@@ -11,6 +11,7 @@ import { QRCodeCanvas } from 'qrcode.react';
 interface FormState {
   originalUrl: string;
   shortCode: string;
+  title: string;
 }
 
 // Define a result state that contains all possible outcomes
@@ -30,6 +31,7 @@ const CreateUrl = () => {
   const [formState, setFormState] = useState<FormState>({
     originalUrl: '',
     shortCode: '',
+    title: '',
   });
   
   // Request state
@@ -119,7 +121,8 @@ const CreateUrl = () => {
     try {
       const result = await createUrl(
         formState.originalUrl, 
-        formState.shortCode || undefined
+        formState.shortCode || undefined,
+        formState.title || undefined
       );
       
       if (result.success) {
@@ -135,6 +138,7 @@ const CreateUrl = () => {
         setFormState({
           originalUrl: '',
           shortCode: '',
+          title: '',
         });
       } else {
         // Handle error
@@ -173,7 +177,7 @@ const CreateUrl = () => {
     setRequestState(prev => ({ ...prev, showQrCode: !prev.showQrCode }));
   };
 
-  const { originalUrl, shortCode } = formState;
+  const { originalUrl, shortCode, title } = formState;
   const { status, shortUrl, error, showQrCode } = requestState;
   const isLoading = status === 'loading';
   const isSuccess = status === 'success';
@@ -210,6 +214,23 @@ const CreateUrl = () => {
               />
               <p className="text-sm text-gray-500">
                 The URL you want to shorten
+              </p>
+            </div>
+            
+            <div className="space-y-2">
+              <label htmlFor="title" className="text-sm font-medium">
+                Title (optional)
+              </label>
+              <Input
+                id="title"
+                name="title"
+                type="text"
+                value={title}
+                onChange={handleInputChange}
+                placeholder="e.g., My Awesome Blog Post"
+              />
+              <p className="text-sm text-gray-500">
+                A descriptive title for this link (optional)
               </p>
             </div>
             
@@ -306,7 +327,7 @@ const CreateUrl = () => {
                     copied: false,
                     showQrCode: false,
                   });
-                  setFormState({ originalUrl: '', shortCode: '' });
+                  setFormState({ originalUrl: '', shortCode: '', title: '' });
                 }}
               >
                 Create Another URL

@@ -5,9 +5,10 @@ export interface UrlWithVisits {
   shortCode: string;
   originalUrl: string;
   visit_count: number;
+  title: string;
 }
 
-export const createUrl = async (originalUrl: string, shortCode?: string) => {
+export const createUrl = async (originalUrl: string, shortCode?: string, title?: string) => {
   try {
     // Ensure originalUrl is properly formatted
     let formattedUrl = originalUrl;
@@ -15,11 +16,16 @@ export const createUrl = async (originalUrl: string, shortCode?: string) => {
       formattedUrl = `https://${originalUrl}`;
     }
     
-    // Match the backend API's expected format: 'url' instead of 'originalUrl'
-    const body: { url: string; shortCode?: string } = { url: formattedUrl };
+    // Add title to body type definition
+    const body: { url: string; shortCode?: string; title?: string } = { url: formattedUrl };
     if (shortCode && shortCode.trim() !== '') {
       body.shortCode = shortCode.trim();
-    }    
+    }
+    // Add title to body if provided
+    if (title && title.trim() !== '') {
+      body.title = title.trim();
+    }
+    
     const response = await fetch(`${baseUrl}/create`, {
       method: 'POST',
       headers: {
@@ -68,17 +74,18 @@ export const getUrls = async (): Promise<UrlWithVisits[]> => {
     const data = await response.json();
     
     // Handle the specific response structure: 
-    // { success: true, urls: { shortcode: { full_url: ..., visit_count: ... } } }
+    // { success: true, urls: { shortcode: { full_url: ..., visit_count: ..., title: ... } } }
     if (data && data.success === true && data.urls && typeof data.urls === 'object') {
       const processedUrls = Object.entries(data.urls).map(([shortCode, urlData]: [string, any]) => {
-        // Validate the inner structure before accessing properties
         const originalUrl = urlData?.full_url || 'Invalid URL Data'; 
         const visit_count = urlData?.visit_count ?? 0;
+        const title = urlData?.title || '';
         
         return {
           shortCode,
           originalUrl: typeof originalUrl === 'string' ? originalUrl : String(originalUrl),
           visit_count: typeof visit_count === 'number' ? visit_count : 0,
+          title: typeof title === 'string' ? title : String(title),
         };
       });
       return processedUrls;
@@ -89,7 +96,8 @@ export const getUrls = async (): Promise<UrlWithVisits[]> => {
       return data.map((item: any) => ({
         shortCode: item.shortCode || item.code || '',
         originalUrl: item.originalUrl || item.url || '',
-        visit_count: item.visit_count ?? 0
+        visit_count: item.visit_count ?? 0,
+        title: item.title || ''
       }));
     }
     

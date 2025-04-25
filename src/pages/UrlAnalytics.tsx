@@ -8,6 +8,7 @@ import toast from 'react-hot-toast';
 interface AnalyticsData {
   shortCode: string;
   originalUrl: string;
+  title: string;
   totalVisits: string | number;
   referrers: Record<string, string | number>;
   countries: Record<string, string | number>;
@@ -118,6 +119,11 @@ const UrlAnalytics = () => {
               <CardTitle>Overview</CardTitle>
             </CardHeader>
             <CardContent>
+              {analytics.title && (
+                <p className="text-lg font-medium mb-2" title={analytics.title}>
+                  {analytics.title}
+                </p>
+              )}
               <p className="text-sm mb-2">
                 Original URL: <a href={analytics.originalUrl} className="text-blue-600 hover:underline" target="_blank" rel="noopener noreferrer">{analytics.originalUrl}</a>
               </p>
