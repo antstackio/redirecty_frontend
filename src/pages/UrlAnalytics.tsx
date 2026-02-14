@@ -32,6 +32,7 @@ const UrlAnalytics = () => {
   const { data: analytics, isLoading: loading, error: swrError } = useSWR(
     shortCode ? `analytics-${shortCode}` : null,
     fetcher,
+    { revalidateOnFocus: false },
   );
   const error = swrError ? (swrError instanceof Error ? swrError.message : 'Failed to load analytics data') : null;
 

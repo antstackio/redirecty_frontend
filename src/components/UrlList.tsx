@@ -43,7 +43,7 @@ export function UrlList() {
   const { data: paginatedData, isLoading: loading, isValidating, error: swrError } = useSWR(
     `urls-page-${currentPage}-search-${debouncedSearch}-sort-${sortBy}`,
     () => getUrls(currentPage, 50, debouncedSearch, sortBy),
-    { keepPreviousData: true },
+    { keepPreviousData: true, revalidateOnFocus: false },
   );
   const urls = paginatedData?.urls.filter(url => url && typeof url === 'object' && url.shortCode) ?? [];
   const total = paginatedData?.total ?? 0;
