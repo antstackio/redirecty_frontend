@@ -104,7 +104,7 @@ const CreateUrl = () => {
 
   // Function to go back to dashboard
   const goToDashboard = () => {
-    navigate('/dashboard');
+    navigate('/');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -142,7 +142,7 @@ const CreateUrl = () => {
         });
       } else {
         // Handle error
-        const resultError = (result as any).error || 'Unknown error';
+        const resultError = result.error || 'Unknown error';
         setRequestState({
           status: 'error',
           shortUrl: '',
@@ -186,14 +186,14 @@ const CreateUrl = () => {
     <div className="container mx-auto p-4 max-w-lg">
       <div className="mb-4 flex items-center">
         <Button variant="link" asChild>
-          <Link to="/dashboard" className="flex items-center gap-1">
+          <Link to="/" className="flex items-center gap-1">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
             Back to Dashboard
           </Link>
         </Button>
       </div>
 
-      <Card>
+      <Card className="animate-fade-up">
         <CardHeader>
           <CardTitle>Create a New URL</CardTitle>
         </CardHeader>
@@ -263,7 +263,7 @@ const CreateUrl = () => {
       </Card>
 
       {isSuccess && shortUrl && (
-        <Card className="mt-4">
+        <Card className="mt-4 animate-scale-in">
           <CardHeader>
             <CardTitle>URL Created Successfully!</CardTitle>
           </CardHeader>
@@ -297,7 +297,7 @@ const CreateUrl = () => {
             </div>
 
             {showQrCode && (
-              <div className="mt-3 space-y-3">
+              <div className="mt-3 space-y-3 animate-scale-in">
                 <div 
                   ref={qrCodeRef} 
                   className="flex justify-center p-4 bg-white rounded-md border"

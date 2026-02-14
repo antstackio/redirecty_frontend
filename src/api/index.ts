@@ -4,11 +4,47 @@ const baseUrl = 'https://antt.me/api'
 export interface UrlWithVisits {
   shortCode: string;
   originalUrl: string;
-  visit_count: number;
-  title: string;
+  visitCount: number;
+  title: string | null;
+  createdAt: string | null;
 }
 
-export const createUrl = async (originalUrl: string, shortCode?: string, title?: string) => {
+export interface PaginatedUrlsResponse {
+  urls: UrlWithVisits[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+interface UrlDataApiResponse {
+  full_url: string;
+  visit_count: number | null;
+  title: string | null;
+  created_at: string | null;
+}
+
+export interface CreateUrlResponse {
+  success: boolean;
+  shortCode?: string;
+  shortUrl: string;
+  error?: string;
+}
+
+export interface AnalyticsApiResponse {
+  success: boolean;
+  error?: string;
+  analytics?: {
+    shortCode: string;
+    originalUrl: string;
+    title?: string;
+    totalVisits: string | number;
+    referrers: Record<string, string | number>;
+    countries: Record<string, string | number>;
+    lastUpdated: string;
+  };
+}
+
+export const createUrl = async (originalUrl: string, shortCode?: string, title?: string): Promise<CreateUrlResponse> => {
   try {
     // Ensure originalUrl is properly formatted
     let formattedUrl = originalUrl;
@@ -42,7 +78,7 @@ export const createUrl = async (originalUrl: string, shortCode?: string, title?:
         if (errorData.error) {
           errorMessage = errorData.error;
         }
-      } catch (jsonError) {
+      } catch {
         // If we can't parse the JSON, just log the raw text
         const errorText = await response.text().catch(() => '');
         console.error('Error response text:', errorText);
@@ -63,52 +99,62 @@ export const createUrl = async (originalUrl: string, shortCode?: string, title?:
   }
 };
 
-export const getUrls = async (): Promise<UrlWithVisits[]> => {
+export const getUrls = async (page: number = 1, pageSize: number = 50, search: string = '', sort: string = 'newest'): Promise<PaginatedUrlsResponse> => {
   try {
-    const response = await fetch(`${baseUrl}/urls`);
-    
+    const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
+    if (search) params.set('search', search);
+    if (sort && sort !== 'newest') params.set('sort', sort);
+    const response = await fetch(`${baseUrl}/urls?${params}`);
+
     if (!response.ok) {
       throw new Error(`Failed to fetch URLs. Status: ${response.status}`);
     }
-    
+
     const data = await response.json();
-    
-    // Handle the specific response structure: 
+
+    let processedUrls: UrlWithVisits[] = [];
+
+    // Handle the specific response structure:
     // { success: true, urls: { shortcode: { full_url: ..., visit_count: ..., title: ... } } }
     if (data && data.success === true && data.urls && typeof data.urls === 'object') {
-      const processedUrls = Object.entries(data.urls).map(([shortCode, urlData]: [string, any]) => {
-        const originalUrl = urlData?.full_url || 'Invalid URL Data'; 
-        const visit_count = urlData?.visit_count ?? 0;
+      processedUrls = Object.entries(data.urls).map(([shortCode, urlData]: [string, UrlDataApiResponse]) => {
+        const originalUrl = urlData?.full_url || 'Invalid URL Data';
+        const visitCount = urlData?.visit_count ?? 0;
         const title = urlData?.title || '';
-        
+        const createdAt = urlData?.created_at || null;
+
         return {
           shortCode,
           originalUrl: typeof originalUrl === 'string' ? originalUrl : String(originalUrl),
-          visit_count: typeof visit_count === 'number' ? visit_count : 0,
+          visitCount: typeof visitCount === 'number' ? visitCount : 0,
           title: typeof title === 'string' ? title : String(title),
+          createdAt,
         };
       });
-      return processedUrls;
-    }
-
-    // Keep array handling as a fallback, although less likely based on provided response
-    if (Array.isArray(data)) {
-      return data.map((item: any) => ({
-        shortCode: item.shortCode || item.code || '',
-        originalUrl: item.originalUrl || item.url || '',
-        visit_count: item.visit_count ?? 0,
-        title: item.title || ''
+    } else if (Array.isArray(data)) {
+      // Keep array handling as a fallback, although less likely based on provided response
+      processedUrls = data.map((item: Record<string, unknown>) => ({
+        shortCode: String(item.shortCode || item.code || ''),
+        originalUrl: String(item.originalUrl || item.url || ''),
+        visitCount: typeof item.visit_count === 'number' ? item.visit_count : 0,
+        title: String(item.title || ''),
+        createdAt: typeof item.created_at === 'string' ? item.created_at : null,
       }));
     }
-    
-    return [];
+
+    return {
+      urls: processedUrls,
+      total: data.total ?? processedUrls.length,
+      page: data.page ?? page,
+      pageSize: data.pageSize ?? pageSize,
+    };
   } catch (error) {
     console.error('Error getting URLs:', error);
     throw error;
   }
 };
 
-export const getUrlAnalytics = async (shortCode: string): Promise<any> => {
+export const getUrlAnalytics = async (shortCode: string): Promise<AnalyticsApiResponse> => {
   try {
     // Removed accountId and apiKey fetching
     // const accountId = import.meta.env.VITE_CF_ACCOUNT_ID;

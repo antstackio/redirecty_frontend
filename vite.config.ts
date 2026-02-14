@@ -18,7 +18,6 @@ export default defineConfig({
         target: 'https://antt.me',
         changeOrigin: true,
         secure: true,
-        rewrite: (path) => path
       }
     },
     cors: true
